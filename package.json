@@ -1,0 +1,21 @@
+{
+  "name": "scrunch-home",
+  "version": "1.0.0",
+  "description": "The home of Scrunch",
+  "main": "main.js",
+  "dependencies": {
+    "domready": "^1.0.8",
+    "normalize.css": "^3.0.3",
+    "three": "^0.71.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tucker Connelly",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tuckerconnelly/scrunch-home.git"
+  }
+}

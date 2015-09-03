@@ -1,0 +1,12 @@
+@import url('node_modules/normalize.css/normalize.css');
+
+body {
+	color: #fff;
+	background-color: #e93a42;
+	background-image: -webkit-linear-gradient(45degdeg, #f0504f,#e93a42);
+	background-image: -webkit-linear-gradient(45deg, #f0504f, #e93a42);
+}
+
+.shape {
+    background-color: #562872;
+}
