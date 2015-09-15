@@ -5,8 +5,10 @@
   "main": "main.js",
   "dependencies": {
     "domready": "^1.0.8",
+    "lodash": "^3.10.1",
     "normalize.css": "^3.0.3",
-    "three": "^0.71.1"
+    "three": "^0.71.1",
+    "tween.js": "^15.0.0"
   },
   "devDependencies": {},
   "scripts": {

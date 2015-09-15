@@ -5,6 +5,14 @@ body {
 	background-color: #e93a42;
 	background-image: -webkit-linear-gradient(45degdeg, #f0504f,#e93a42);
 	background-image: -webkit-linear-gradient(45deg, #f0504f, #e93a42);
+
+	overflow-x: hidden;
+
+	height: 2000px;
+}
+
+body canvas {
+	position: fixed;
 }
 
 .shape {
