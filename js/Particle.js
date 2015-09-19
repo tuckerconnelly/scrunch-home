@@ -8,8 +8,8 @@
  * @param {Object} floatingPosition The coordinates of the floating position
  * @param {Object} characterPosition The coordinates of the character position
  */
-var Particle = function (type, floatingPosition, characterPosition) {
-	this.initialize(type, floatingPosition, characterPosition);
+var Particle = function (type, floatingPositionScaleOpacity, characterPositionScaleOpacity) {
+	this.initialize(type, floatingPositionScaleOpacity, characterPositionScaleOpacity);
 };
 
 Particle.SQUARE = 0;
@@ -31,23 +31,11 @@ Particle.prototype = {
 
 	floatingTimeout: undefined,
 
-	initialize: function (type, floatingPosition, characterPosition) {
+	initialize: function (type, floatingPositionScaleOpacity, characterPositionScaleOpacity) {
 
-		var scaleFactor = (Math.random()*2);
+		this.floatingPositionScaleOpacity = floatingPositionScaleOpacity;
 
-		this.floatingPositionScaleOpacity = {
-			x: floatingPosition.x,
-			y: floatingPosition.y,
-			scale: scaleFactor*(window.innerWidth / 1024),
-			opacity: Math.random() * 0.8 + 0.2
-		};
-
-		this.characterPositionScaleOpacity = {
-			x: characterPosition.x,
-			y: characterPosition.y,
-			scale: window.innerWidth/1024,
-			opacity: 1
-		};
+		this.characterPositionScaleOpacity = characterPositionScaleOpacity;
 
 		// Create the material and geometries
 		var material = new THREE.MeshBasicMaterial({
@@ -88,7 +76,7 @@ Particle.prototype = {
 			this.floatingPositionScaleOpacity.scale
 		);
 
-		this.mesh.position.set(this.floatingPositionScaleOpacity.x, this.floatingPositionScaleOpacity.y, 1);
+		this.mesh.position.set(this.floatingPositionScaleOpacity.x, this.floatingPositionScaleOpacity.y, 0);
 
 		// Start the tween
 		this.floatingTween = new TWEEN.Tween( this.mesh.position )
@@ -116,13 +104,16 @@ Particle.prototype = {
 
 	goToCharacterPosition: function () {
 		this.floatingTween.stop();
+		if (this.toFloatingTween !== undefined) {
+			this.toFloatingTween.stop();
+		}
 		clearTimeout(this.floatingTimeout);
 
 		var currentPositionScaleOpacity = {
 			x: this.mesh.position.x,
 			y: this.mesh.position.y,
-			scale: this.floatingPositionScaleOpacity.scale,
-			opacity: this.floatingPositionScaleOpacity.opacity
+			scale: this.mesh.scale.x,
+			opacity: this.mesh.material.opacity
 		};
 
 		var particle = this;
@@ -130,7 +121,7 @@ Particle.prototype = {
 		this.toCharacterTween = new TWEEN.Tween( currentPositionScaleOpacity )
 			.to(this.characterPositionScaleOpacity, 1000)
 			.onUpdate( function (e) {
-				particle.mesh.position.set(this.x, this.y, 1);
+				particle.mesh.position.set(this.x, this.y, 0);
 				particle.mesh.scale.set(this.scale, this.scale, this.scale);
 				particle.mesh.material.opacity = this.opacity;
 			})
@@ -146,13 +137,16 @@ Particle.prototype = {
 
 	goToFloatingPosition: function () {
 		this.characterFloatingTween.stop();
+		if (this.toCharacterTween !== undefined) {
+			this.toCharacterTween.stop();
+		}
 		clearTimeout(this.floatingTimeout);
 
 		var currentPositionScaleOpacity = {
 			x: this.mesh.position.x,
 			y: this.mesh.position.y,
-			scale: this.characterPositionScaleOpacity.scale,
-			opacity: this.characterPositionScaleOpacity.opacity
+			scale: this.mesh.scale.x,
+			opacity: this.mesh.material.opacity
 		};
 
 		var particle = this;
@@ -160,7 +154,7 @@ Particle.prototype = {
 		this.toFloatingTween = new TWEEN.Tween( currentPositionScaleOpacity )
 			.to(this.floatingPositionScaleOpacity, 1000)
 			.onUpdate( function (e) {
-				particle.mesh.position.set(this.x, this.y, 1);
+				particle.mesh.position.set(this.x, this.y, 0);
 				particle.mesh.scale.set(this.scale, this.scale, this.scale);
 				particle.mesh.material.opacity = this.opacity;
 			})

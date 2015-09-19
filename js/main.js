@@ -26,27 +26,54 @@ domready( function () {
 		renderer.setSize( window.innerWidth, window.innerHeight );
 
 		particles.forEach( function (particle) {
-			particle.floatingTween.stop();
-			particle.mesh.position.set(
-				particle.floatingPosition.x * (window.innerWidth / currentWidth),
-				particle.floatingPosition.y * (window.innerHeight / currentHeight),
-				particle.floatingPosition.z
-			);
 
-			particle.floatingPosition = {
-				x: particle.mesh.position.x,
-				y: particle.mesh.position.y,
-				z: particle.mesh.position.z
+			particle.floatingPositionScaleOpacity = {
+				x: particle.floatingPositionScaleOpacity.x * (window.innerWidth / currentWidth),
+				y: particle.floatingPositionScaleOpacity.y * (window.innerHeight / currentHeight),
+				scale: particle.floatingPositionScaleOpacity.scale * (window.innerWidth / currentWidth),
+				opacity: particle.floatingPositionScaleOpacity.opacity
 			};
 
-			particle.mesh.scale.set(
-				particle.mesh.scale.x * (window.innerWidth / currentWidth),
-				particle.mesh.scale.y * (window.innerWidth / currentWidth),
-				particle.mesh.scale.z * (window.innerWidth / currentWidth)
-			);
+			particle.characterPositionScaleOpacity = {
+				x: particle.characterPositionScaleOpacity.x * (window.innerWidth / currentWidth),
+				y: particle.characterPositionScaleOpacity.y * (window.innerHeight / currentHeight),
+				scale: window.innerWidth / 1024,
+				opacity: particle.characterPositionScaleOpacity.opacity
+			};
 
-			particle.floatingTween.to({ y: particle.floatingPosition.y + FLOAT_AMOUNT });
-			particle.floatingTween.start();
+			if (textFormed !== true) {
+				particle.floatingTween.stop();
+				particle.mesh.position.set(
+					particle.floatingPositionScaleOpacity.x,
+					particle.floatingPositionScaleOpacity.y,
+					0
+				);
+
+				particle.mesh.scale.set(
+					particle.floatingPositionScaleOpacity.scale,
+					particle.floatingPositionScaleOpacity.scale,
+					particle.floatingPositionScaleOpacity.scale
+				);
+
+				particle.floatingTween.to({ y: particle.floatingPositionScaleOpacity.y + FLOAT_AMOUNT });
+				particle.floatingTween.start();
+			} else {
+				particle.characterFloatingTween.stop();
+				particle.mesh.position.set(
+					particle.characterPositionScaleOpacity.x,
+					particle.characterPositionScaleOpacity.y,
+					0
+				);
+
+				particle.mesh.scale.set(
+					particle.characterPositionScaleOpacity.scale,
+					particle.characterPositionScaleOpacity.scale,
+					particle.characterPositionScaleOpacity.scale
+				);
+
+				particle.characterFloatingTween.to({ y: particle.characterPositionScaleOpacity.y + FLOAT_AMOUNT });
+				particle.characterFloatingTween.start();
+			}
 		});
 
 		currentWidth = window.innerWidth;
@@ -70,21 +97,33 @@ domready( function () {
 			var sceneWidth = window.innerWidth * 1.5;
 			var sceneHeight = window.innerHeight * 1.5;
 
-			var floatingPosition = {
+			var scaleFactor = Math.random()*1.5+0.5;
+
+			var offScreen = Math.random() > 0.5;
+
+			var floatingPositionScaleOpacity = {
 				x: Math.random()*sceneWidth - sceneWidth / 2,
 				y: Math.random()*sceneHeight - sceneHeight / 2,
-				z: 0
+				scale: offScreen ? scaleFactor*(window.innerWidth/1024) + 5 : scaleFactor*(window.innerWidth / 1024),
+				opacity: offScreen ? 0 : Math.random() * 0.8 + 0.2
+			};
+
+			var characterPositionScaleOpacity = {
+				x: particlePosition.x,
+				y: particlePosition.y,
+				scale: window.innerWidth/1024,
+				opacity: 1
 			};
 
 			switch (n % 3) {
 				case 0:
-					particle = new Particle(Particle.SQUARE, floatingPosition, particlePosition);
+					particle = new Particle(Particle.SQUARE, floatingPositionScaleOpacity, characterPositionScaleOpacity);
 					break;
 				case 1:
-					particle = new Particle(Particle.CIRCLE, floatingPosition, particlePosition);
+					particle = new Particle(Particle.CIRCLE, floatingPositionScaleOpacity, characterPositionScaleOpacity);
 					break;
 				case 2:
-					particle = new Particle(Particle.TRIANGLE, floatingPosition, particlePosition);
+					particle = new Particle(Particle.TRIANGLE, floatingPositionScaleOpacity, characterPositionScaleOpacity);
 					break;
 			}
 
@@ -109,23 +148,34 @@ domready( function () {
 
 	// Scroll hacking
 
-	var numberFormed = false;
+	var textFormed = false;
+	var leftBehind = false;
 
 	window.addEventListener('scroll', function () {
-		if (document.body.scrollTop > 200 && numberFormed === false) {
-			numberFormed = true;
-			console.log('form');
-
-			particles.forEach( function (particle) {
-				particle.goToCharacterPosition();
-			});
-		} else if (document.body.scrollTop <= 200 && numberFormed === true) {
-			numberFormed = false;
+		if (document.body.scrollTop <= CHARACTER_FORMED_CUTOFF && textFormed === true) {
+			textFormed = false;
 			console.log('dissolve');
 
 			particles.forEach( function (particle) {
 				particle.goToFloatingPosition();
 			});
+		} else if (document.body.scrollTop > CHARACTER_FORMED_CUTOFF && document.body.scrollTop <= CHARACTER_LEFT_BEHIND_CUTOFF && (textFormed === false || leftBehind === true)) {
+			textFormed = true;
+			leftBehind = false;
+			console.log('form');
+
+			renderer.domElement.style.position = 'fixed';
+			renderer.domElement.style.top = '0px';
+
+			particles.forEach( function (particle) {
+				particle.goToCharacterPosition();
+			});
+		} else if (document.body.scrollTop > CHARACTER_LEFT_BEHIND_CUTOFF && leftBehind !== true) {
+			leftBehind = true;
+			console.log('left behind');
+
+			renderer.domElement.style.position = 'absolute';
+			renderer.domElement.style.top = CHARACTER_LEFT_BEHIND_CUTOFF+'px';
 		}
 	});
 });
