@@ -151,15 +151,15 @@ domready( function () {
 	var textFormed = false;
 	var leftBehind = false;
 
-	window.addEventListener('scroll', function () {
-		if (document.body.scrollTop <= CHARACTER_FORMED_CUTOFF && textFormed === true) {
+	$(document).on('scroll', function () {
+		if ($(document).scrollTop() <= CHARACTER_FORMED_CUTOFF && textFormed === true) {
 			textFormed = false;
 			console.log('dissolve');
 
 			particles.forEach( function (particle) {
 				particle.goToFloatingPosition();
 			});
-		} else if (document.body.scrollTop > CHARACTER_FORMED_CUTOFF && document.body.scrollTop <= CHARACTER_LEFT_BEHIND_CUTOFF && (textFormed === false || leftBehind === true)) {
+		} else if ($(document).scrollTop() > CHARACTER_FORMED_CUTOFF && $(document).scrollTop() <= CHARACTER_LEFT_BEHIND_CUTOFF && (textFormed === false || leftBehind === true)) {
 			textFormed = true;
 			leftBehind = false;
 			console.log('form');
@@ -170,7 +170,7 @@ domready( function () {
 			particles.forEach( function (particle) {
 				particle.goToCharacterPosition();
 			});
-		} else if (document.body.scrollTop > CHARACTER_LEFT_BEHIND_CUTOFF && leftBehind !== true) {
+		} else if ($(document).scrollTop() > CHARACTER_LEFT_BEHIND_CUTOFF && leftBehind !== true) {
 			leftBehind = true;
 			console.log('left behind');
 
