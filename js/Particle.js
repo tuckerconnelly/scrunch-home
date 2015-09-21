@@ -102,12 +102,20 @@ Particle.prototype = {
 		}.bind(this), Math.random()*4000);
 	},
 
-	goToCharacterPosition: function () {
+	killTweens: function () {
 		this.floatingTween.stop();
+		this.characterFloatingTween.stop();
 		if (this.toFloatingTween !== undefined) {
 			this.toFloatingTween.stop();
 		}
+		if (this.toCharacterTween !== undefined) {
+			this.toCharacterTween.stop();
+		}
 		clearTimeout(this.floatingTimeout);
+	},
+
+	goToCharacterPosition: function () {
+		this.killTweens();
 
 		var currentPositionScaleOpacity = {
 			x: this.mesh.position.x,
@@ -136,11 +144,7 @@ Particle.prototype = {
 	},
 
 	goToFloatingPosition: function () {
-		this.characterFloatingTween.stop();
-		if (this.toCharacterTween !== undefined) {
-			this.toCharacterTween.stop();
-		}
-		clearTimeout(this.floatingTimeout);
+		this.killTweens();
 
 		var currentPositionScaleOpacity = {
 			x: this.mesh.position.x,

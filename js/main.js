@@ -153,29 +153,42 @@ domready( function () {
 
 	$(document).on('scroll', function () {
 		if ($(document).scrollTop() <= CHARACTER_FORMED_CUTOFF && textFormed === true) {
-			textFormed = false;
 			console.log('dissolve');
 
-			particles.forEach( function (particle) {
-				particle.goToFloatingPosition();
-			});
-		} else if ($(document).scrollTop() > CHARACTER_FORMED_CUTOFF && $(document).scrollTop() <= CHARACTER_LEFT_BEHIND_CUTOFF && (textFormed === false || leftBehind === true)) {
-			textFormed = true;
+			if (leftBehind === false) {
+				particles.forEach( function (particle) {
+					console.log('GO TO FLOATING POSITION');
+					particle.goToFloatingPosition();
+				});
+			} else {
+				renderer.domElement.style.position = 'fixed';
+				renderer.domElement.style.top = '0px';
+			}
+
+			textFormed = false;
 			leftBehind = false;
+		} else if ($(document).scrollTop() > CHARACTER_FORMED_CUTOFF && $(document).scrollTop() <= CHARACTER_LEFT_BEHIND_CUTOFF && (textFormed === false || leftBehind === true)) {
 			console.log('form');
 
-			renderer.domElement.style.position = 'fixed';
-			renderer.domElement.style.top = '0px';
+			if (leftBehind === false) {
+				particles.forEach( function (particle) {
+					console.log('GO TO CHARACTER POSITION');
+					particle.goToCharacterPosition();
+				});
+			} else {
+				renderer.domElement.style.position = 'fixed';
+				renderer.domElement.style.top = '0px';
+			}
 
-			particles.forEach( function (particle) {
-				particle.goToCharacterPosition();
-			});
+			textFormed = true;
+			leftBehind = false;
 		} else if ($(document).scrollTop() > CHARACTER_LEFT_BEHIND_CUTOFF && leftBehind !== true) {
-			leftBehind = true;
 			console.log('left behind');
 
 			renderer.domElement.style.position = 'absolute';
 			renderer.domElement.style.top = CHARACTER_LEFT_BEHIND_CUTOFF+'px';
+
+			leftBehind = true;
 		}
 	});
 });
