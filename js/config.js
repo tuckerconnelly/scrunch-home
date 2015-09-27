@@ -9,32 +9,11 @@ var CHARACTER_FORMED_CUTOFF = 200;
 var CHARACTER_LEFT_BEHIND_CUTOFF = 400;
 
 /**
- * The text the particles form in to
- * @type {String}
- */
-var particleText = '3.0';
-
-/**
- * The x/y coordinates of all the particles within certain characters
+ * The x/y coordinates of all the particles when formed
  * @type {Object}
  */
-var particleTextMaps = {
-	'3': {
-		width: 32,
-		particles: [
-			{ x: 16, y: 16 }
-		]
-	},
-	'.': {
-		width: 32,
-		particles: [
-			{ x: 32, y: 32 }
-		]
-	},
-	'0': {
-		width: 32,
-		particles: [
-			{ x: 48, y: 48 }
-		]
-	}
-};
+var PARTICLE_FORMED_POSITIONS = [
+	{ x: 16, y: 16 },
+	{ x: 32, y: 32 },
+	{ x: 48, y: 48 }
+];
