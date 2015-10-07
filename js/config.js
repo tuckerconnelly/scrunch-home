@@ -6,7 +6,6 @@ var FLOAT_AMOUNT = 10;
 var CHARACTER_FLOAT_AMOUNT = 5;
 
 var CHARACTER_FORMED_CUTOFF = 200;
-var CHARACTER_LEFT_BEHIND_CUTOFF = 400;
 
 /**
  * The x/y coordinates of all the particles when formed

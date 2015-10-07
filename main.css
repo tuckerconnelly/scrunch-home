@@ -1,5 +1,9 @@
 @import url('node_modules/normalize.css/normalize.css');
 
+html {
+    font-size: 62.5%;
+}
+
 body {
 	color: #fff;
 	background-color: #e93a42;
@@ -13,8 +17,57 @@ body {
 
 body canvas {
 	position: fixed;
+
+	z-index: -1;
+
 }
 
-.shape {
-    background-color: #562872;
+main > div {
+	position: fixed;
+	left: 50%;
+
+	width: 60rem;
+	margin-left: -30rem;
+
+	text-align: center;
+
+	opacity: 1;
+}
+
+#init-text {
+	position: fixed;
+}
+
+#billion-reasons {
+	position: absolute;
+	top: 400px;
+
+	opacity: 0;
+}
+
+h1, h2, h3, h4, h5 {
+	font-family: "Gotham SSm A","Gotham SSm B","gotham","HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+h1 {
+	font-weight: normal;
+	font-size: 7rem;
+	line-height: 1.1em;
+	letter-spacing: -0.03em;
+}
+
+h2 {
+    font-size: 2.4rem;
+    font-weight: normal;
+    line-height: 1.5em;
+}
+
+@media (max-width: 700px) {
+	h1 {
+	    font-size: 4.2rem;
+	}
+
+	h2 {
+		font-size: 1.8rem;
+	}
 }

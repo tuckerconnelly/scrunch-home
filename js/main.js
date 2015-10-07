@@ -18,7 +18,7 @@ domready( function () {
 
 	var particles = [];
 
-	window.addEventListener( 'resize', function () {
+	window.addEventListener( 'resize', _.debounce(function () {
 
 		// Mobile browsers trigger resize on scroll for the
 		// url bar, which changes the height, so only listen
@@ -88,7 +88,7 @@ domready( function () {
 
 		currentWidth = window.innerWidth;
 		currentHeight = window.innerHeight;
-	});
+	}, 1000));
 
 	// Particle stuff
 
@@ -118,8 +118,8 @@ domready( function () {
 		var characterPositionScaleOpacity = {
 			x: particleFormedPosition.x,
 			y: particleFormedPosition.y,
-			scale: window.innerWidth/1024,
-			opacity: 1
+			scale: (Math.random()*0.4 + 0.8)*window.innerWidth/1024 * 0.6,
+			opacity: Math.random() * 0.4 + 0.6
 		};
 
 		switch (n % 3) {
@@ -155,44 +155,71 @@ domready( function () {
 	// Scroll hacking
 
 	var textFormed = false;
-	var leftBehind = false;
 
 	$(document).on('scroll', function () {
 		if ($(document).scrollTop() <= CHARACTER_FORMED_CUTOFF && textFormed === true) {
 			console.log('dissolve');
 
-			if (leftBehind === false) {
-				particles.forEach( function (particle) {
-					particle.goToFloatingPosition();
-				});
-			} else {
-				renderer.domElement.style.position = 'fixed';
-				renderer.domElement.style.top = '0px';
-			}
+			particles.forEach( function (particle) {
+				particle.goToFloatingPosition();
+			});
+			renderer.domElement.style.position = 'fixed';
+			renderer.domElement.style.top = '0px';
+
+			$('#init-text')
+			.css({
+				top: '20px'
+			})
+			.animate({
+				top: 0,
+				opacity: 1
+			});
+			$('#billion-reasons').animate({
+				top: (180 + window.innerHeight/2)+'px',
+				opacity: 0
+			});
 
 			textFormed = false;
-			leftBehind = false;
-		} else if ($(document).scrollTop() > CHARACTER_FORMED_CUTOFF && $(document).scrollTop() <= CHARACTER_LEFT_BEHIND_CUTOFF && (textFormed === false || leftBehind === true)) {
+		} else if ($(document).scrollTop() > CHARACTER_FORMED_CUTOFF && textFormed === false) {
 			console.log('form');
 
-			if (leftBehind === false) {
-				particles.forEach( function (particle) {
-					particle.goToCharacterPosition();
-				});
-			} else {
-				renderer.domElement.style.position = 'fixed';
-				renderer.domElement.style.top = '0px';
-			}
+			particles.forEach( function (particle) {
+				particle.goToCharacterPosition();
+			});
+			renderer.domElement.style.position = 'absolute';
+			renderer.domElement.style.top = CHARACTER_FORMED_CUTOFF+'px';
+			
+			$('#init-text').animate({
+				top: '-20px',
+				opacity: 0
+			});
+			$('#billion-reasons')
+			.css({
+				top: (220 + window.innerHeight/2)+'px'
+			})
+			.animate({
+				top: (200 + window.innerHeight/2)+'px',
+				opacity: 1
+			});
 
 			textFormed = true;
-			leftBehind = false;
-		} else if ($(document).scrollTop() > CHARACTER_LEFT_BEHIND_CUTOFF && leftBehind !== true) {
-			console.log('left behind');
-
-			renderer.domElement.style.position = 'absolute';
-			renderer.domElement.style.top = CHARACTER_LEFT_BEHIND_CUTOFF+'px';
-
-			leftBehind = true;
 		}
+	});
+
+	$(window).on('resize', _.debounce(function () {
+
+		if (window.innerWidth === currentWidth) {
+			return;
+		}
+
+		var newTop = 450 + window.innerHeight/2;
+
+		$('#billion-reasons').css({
+			top: newTop+'px'
+		});
+	}, 1000));
+
+	$('#billion-reasons').css({
+		top: (450 + window.innerHeight/2)+'px'
 	});
 });
