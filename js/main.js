@@ -47,7 +47,7 @@ domready( function () {
 			particle.characterPositionScaleOpacity = {
 				x: particle.characterPositionScaleOpacity.x * (window.innerWidth / currentWidth),
 				y: particle.characterPositionScaleOpacity.y * (window.innerWidth / currentWidth),
-				scale: window.innerWidth / 1024,
+				scale: particle.characterPositionScaleOpacity.scale / currentWidth * window.innerWidth,
 				opacity: particle.characterPositionScaleOpacity.opacity
 			};
 
