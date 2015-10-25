@@ -7,6 +7,8 @@ var CHARACTER_FLOAT_AMOUNT = 5;
 
 var CHARACTER_FORMED_CUTOFF = 200;
 
+var LINE_SPEED = 5;
+
 /**
  * The x/y coordinates of all the particles when formed
  * @type {Object}
