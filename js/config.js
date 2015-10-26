@@ -16,5 +16,11 @@ var LINE_SPEED = 5;
 var PARTICLE_FORMED_POSITIONS = [
 	{ x: 16, y: 16 },
 	{ x: 32, y: 32 },
+	{ x: 48, y: 48 },
+	{ x: 16, y: 16 },
+	{ x: 32, y: 32 },
+	{ x: 48, y: 48 },
+	{ x: 16, y: 16 },
+	{ x: 32, y: 32 },
 	{ x: 48, y: 48 }
 ];

@@ -86,6 +86,9 @@ domready( function () {
 			}
 		});
 
+		scene.remove(line.object);
+		makeLine();
+
 		currentWidth = window.innerWidth;
 		currentHeight = window.innerHeight;
 	}, 1000));
@@ -112,11 +115,11 @@ domready( function () {
 		var offScreen = false; //Math.random() > 0.5;
 
 
-		var theX = 0;
-		var theY = 0;
+		var theX = 20;
+		var theY = -300;
 		if (!one) {
 			theX = 0;
-			theY = 150;
+			theY = 300;
 			one = true;
 		}
 
@@ -183,6 +186,8 @@ domready( function () {
 				opacity: 0
 			});
 
+			makeLine();
+
 			textFormed = false;
 		} else if ($(document).scrollTop() > CHARACTER_FORMED_CUTOFF && textFormed === false) {
 			console.log('form');
@@ -205,6 +210,8 @@ domready( function () {
 				top: (200 + window.innerHeight/2)+'px',
 				opacity: 1
 			});
+		
+			scene.remove(line.object);
 
 			textFormed = true;
 		}
@@ -233,102 +240,13 @@ domready( function () {
 	var line = {};
 
 	var makeLine = function () {
-		line = {
-			leftToRight: undefined,
-			q: undefined,
-			theta1: undefined,
-			theta2: undefined,
-
-			curve: undefined,
-			line: undefined,
-			geometry: undefined,
-			object: undefined
-		};
-
-		var selectedParticles = [];
-		while (selectedParticles.length < 2) {
-			var index = Math.round(Math.random() * (foregroundParticles.length - 1));
-			if (selectedParticles[0] === index) {
-				continue;
-			}
-			selectedParticles.push(index);
-		}
-
-		var leftParticle = foregroundParticles[selectedParticles[0]];
-		var rightParticle = foregroundParticles[selectedParticles[1]];
-
-		if (leftParticle.floatingPositionScaleOpacity.x > rightParticle.floatingPositionScaleOpacity.x) {
-			leftParticle = foregroundParticles[selectedParticles[1]];
-			rightParticle = foregroundParticles[selectedParticles[0]];
-		}
-
-		line.leftToRight = Math.random() > 0.5;
-
-		var x1 = leftParticle.floatingPositionScaleOpacity.x;
-		var y1 = leftParticle.floatingPositionScaleOpacity.y;
-		var x2 = rightParticle.floatingPositionScaleOpacity.x;
-		var y2 = rightParticle.floatingPositionScaleOpacity.y;
-
-		line.q = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
-
-		var r = line.q;
-
-		var x3 = (x1 + x2) / 2;
-		var y3 = (y1 + y2) / 2;
-
-		var x = x3 - Math.sqrt(Math.pow(r, 2)-Math.pow(line.q/2, 2))*(y1-y2)/line.q;
-		var y = y3 - Math.sqrt(Math.pow(r, 2)-Math.pow(line.q/2, 2))*(x2-x1)/line.q;
-
-		line.theta1 = Math.PI - Math.acos((x - x1)/r);
-		line.theta2 = Math.PI - Math.acos((x - x2)/r);
-
-		var oneIsNegative = false;
-
-		if (y1 < y) {
-			line.theta1 = -line.theta1;
-			oneIsNegative = true;
-		}
-		if (y2 < y) {
-			line.theta2 = -line.theta2;
-			oneIsNegative = true;
-		}
-
-		// Adjust for particle size
-		line.theta1 -= Math.PI / line.q * 6;
-		line.theta2 += Math.PI / line.q * 6;
-
-		console.log(line.theta1 *180/Math.PI, line.theta2 * 180/Math.PI)
-
-		line.curve = new THREE.EllipseCurve(
-			x, y,
-			r, r,
-			line.theta1, line.theta1, //line.leftToRight ? line.theta1 : line.theta2, line.leftToRight ? line.theta2 : line.theta1,
-			true,
-			0
-		);
-
-		line.path = new THREE.Path();
-		line.geometry = line.path.createGeometry( line.curve.getPoints(50) );
-		line.geometry.computeLineDistances();
-
-		line.object = new THREE.Line( line.geometry, new THREE.LineDashedMaterial({ color: 0xffffff, dashSize: 20, gapSize: 10 }));
+		line = new Line(foregroundParticles, scene);
 	};
 
 	makeLine();
 	//setInterval(makeLine, 3000);
 
 	// Render loops
-	
-	var renderLine = function () {
-		scene.remove(line.object);
-
-		line.geometry = line.path.createGeometry( line.curve.getPoints(50) );
-		line.geometry.computeLineDistances();
-
-		line.object.geometry = line.geometry;
-
-		scene.add(line.object);
-	};
 
 	function render(time) {
 		requestAnimationFrame( render );
@@ -336,17 +254,6 @@ domready( function () {
 		TWEEN.update();
 
 		var adjustedLineSpeed = LINE_SPEED / line.q;
-
-		if (line.curve.aEndAngle - adjustedLineSpeed > line.theta2) {
-			line.curve.aEndAngle -= adjustedLineSpeed;
-			renderLine();
-		} else if (line.curve.aStartAngle - adjustedLineSpeed > line.curve.aEndAngle) {
-			line.curve.aStartAngle -= LINE_SPEED / line.q;
-			renderLine();
-		} else {
-			scene.remove(line.object);
-			makeLine();
-		}
 
 		renderer.render( scene, camera );
 	}
