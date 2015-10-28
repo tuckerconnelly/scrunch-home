@@ -86,6 +86,8 @@ domready( function () {
 			}
 		});
 
+		line.growingTween.stop();
+		line.shrinkingTween.stop();
 		scene.remove(line.object);
 		makeLine();
 
@@ -100,7 +102,7 @@ domready( function () {
 
 	var one = false;
 
-	PARTICLE_FORMED_POSITIONS.forEach( function (particleFormedPosition) {
+	PARTICLE_FORMED_POSITIONS.forEach( function (particleFormedPosition, index) {
 		var particle;
 
 		// innerWidth of 728 gives you three width of 243 * 2 = 486
@@ -112,13 +114,14 @@ domready( function () {
 
 		var scaleFactor = Math.random()*1.5+0.5;
 
-		var offScreen = false; //Math.random() > 0.5;
-
+		// We need at least two particles on screen for the connection
+		// lines
+		var offScreen = index > 1 ? Math.random() > 0.33 : false;
 
 		var theX = 20;
-		var theY = -300;
+		var theY = -100;
 		if (!one) {
-			theX = 0;
+			theX = 40;
 			theY = 300;
 			one = true;
 		}
@@ -159,13 +162,28 @@ domready( function () {
 		n++;
 	});
 
+	particles = particles.sort( function (a, b) {
+		if (a.characterPositionScaleOpacity.x < b.characterPositionScaleOpacity.x) {
+			return -1;
+		}
+
+		if (a.characterPositionScaleOpacity.x > b.characterPositionScaleOpacity.x) {
+			return 1;
+		}
+
+		return 0;
+	});
+
 	// Scroll hacking
 
 	var textFormed = false;
+	var lineTimeout;
 
 	$(document).on('scroll', function () {
 		if ($(document).scrollTop() <= CHARACTER_FORMED_CUTOFF && textFormed === true) {
 			console.log('dissolve');
+
+			$('#init-text').stop();
 
 			particles.forEach( function (particle) {
 				particle.goToFloatingPosition();
@@ -173,44 +191,55 @@ domready( function () {
 			renderer.domElement.style.position = 'fixed';
 			renderer.domElement.style.top = '0px';
 
-			$('#init-text')
-			.css({
-				top: '20px'
-			})
-			.animate({
-				top: 0,
-				opacity: 1
-			});
 			$('#billion-reasons').animate({
-				top: (180 + window.innerHeight/2)+'px',
+				top: $('#billion-reasons').height() + window.innerHeight/2 +'px',
 				opacity: 0
+			}, TRANSITION_TIME / 2, 'easeInQuad', function () {
+				$('#init-text')
+					.css({
+						top: '-5rem'
+					})
+					.animate({
+						top: 0,
+						opacity: 1
+					}, TRANSITION_TIME / 2, 'easeOutQuad');
 			});
 
-			makeLine();
+			lineTimeout = setTimeout( function () {
+				makeLine();
+			}, 1500);
 
 			textFormed = false;
 		} else if ($(document).scrollTop() > CHARACTER_FORMED_CUTOFF && textFormed === false) {
 			console.log('form');
 
-			particles.forEach( function (particle) {
-				particle.goToCharacterPosition();
+			$('#billion-reasons').stop();
+
+			particles.forEach( function (particle, index) {
+				setTimeout( function () {
+					particle.goToCharacterPosition();
+				}, index * LEFT_TO_RIGHT_DELAY);
 			});
 			renderer.domElement.style.position = 'absolute';
 			renderer.domElement.style.top = CHARACTER_FORMED_CUTOFF+'px';
 			
 			$('#init-text').animate({
-				top: '-20px',
+				top: '-4rem',
 				opacity: 0
-			});
-			$('#billion-reasons')
-			.css({
-				top: (220 + window.innerHeight/2)+'px'
-			})
-			.animate({
-				top: (200 + window.innerHeight/2)+'px',
-				opacity: 1
+			}, TRANSITION_TIME / 2, 'easeInQuad', function () {
+				$('#billion-reasons')
+					.css({
+						top: ($('#billion-reasons').height() + window.innerHeight/2)+'px'
+					})
+					.animate({
+						top: (200 + window.innerHeight/2)+'px',
+						opacity: 1
+					}, TRANSITION_TIME / 2, 'easeOutBack');
 			});
 		
+			clearTimeout(lineTimeout);
+			line.growingTween.stop();
+			line.shrinkingTween.stop();
 			scene.remove(line.object);
 
 			textFormed = true;
@@ -237,14 +266,16 @@ domready( function () {
 
 	// Lines
 
-	var line = {};
+	var line;
 
 	var makeLine = function () {
 		line = new Line(foregroundParticles, scene);
+		line.once('death', function () {
+			makeLine();
+		});
 	};
 
 	makeLine();
-	//setInterval(makeLine, 3000);
 
 	// Render loops
 
@@ -252,8 +283,6 @@ domready( function () {
 		requestAnimationFrame( render );
 
 		TWEEN.update();
-
-		var adjustedLineSpeed = LINE_SPEED / line.q;
 
 		renderer.render( scene, camera );
 	}

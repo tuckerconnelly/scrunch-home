@@ -36,11 +36,12 @@ main > div {
 
 #init-text {
 	position: fixed;
+	margin-top: 10rem;
 }
 
 #billion-reasons {
 	position: absolute;
-	top: 400px;
+	top: 40rem;
 
 	opacity: 0;
 }
@@ -51,8 +52,8 @@ h1, h2, h3, h4, h5 {
 
 h1 {
 	font-weight: normal;
-	font-size: 7rem;
-	line-height: 1.1em;
+	font-size: 4.5rem;
+	line-height: 1.5;
 	letter-spacing: -0.03em;
 }
 

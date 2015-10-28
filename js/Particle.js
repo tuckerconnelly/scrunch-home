@@ -1,5 +1,5 @@
 /* jshint globalstrict: true, browser: true */
-/* global THREE, TWEEN, PrismGeometry */
+/* global THREE, TWEEN, PrismGeometry, TRANSITION_TIME */
 
 'use strict';
 
@@ -27,7 +27,11 @@ Particle.prototype = {
 	floatingTween: undefined,
 	characterFloatingTween: undefined,
 	toFloatingTween: undefined,
-	toCharacterTween: undefined,
+
+	toCharacterXTween: undefined,
+	toCharacterYTween: undefined,
+	toCharacterScaleTween: undefined,
+	toCharacterOpacityTween: undefined,
 
 	floatingTimeout: undefined,
 
@@ -108,8 +112,11 @@ Particle.prototype = {
 		if (this.toFloatingTween !== undefined) {
 			this.toFloatingTween.stop();
 		}
-		if (this.toCharacterTween !== undefined) {
-			this.toCharacterTween.stop();
+		if (this.toCharacterYTween !== undefined) {
+			this.toCharacterXTween.stop();
+			this.toCharacterYTween.stop();
+			this.toCharacterScaleTween.stop();
+			this.toCharacterOpacityTween.stop();
 		}
 		clearTimeout(this.floatingTimeout);
 	},
@@ -119,28 +126,50 @@ Particle.prototype = {
 
 		var currentPositionScaleOpacity = {
 			x: this.mesh.position.x,
-			y: this.mesh.position.y,
 			scale: this.mesh.scale.x,
 			opacity: this.mesh.material.opacity
 		};
 
 		var particle = this;
 
-		this.toCharacterTween = new TWEEN.Tween( currentPositionScaleOpacity )
-			.to(this.characterPositionScaleOpacity, 1000)
-			.onUpdate( function (e) {
-				particle.mesh.position.set(this.x, this.y, 0);
-				particle.mesh.scale.set(this.scale, this.scale, this.scale);
-				particle.mesh.material.opacity = this.opacity;
-			})
-			.easing( TWEEN.Easing.Sinusoidal.InOut )
-			.onComplete( function () {
-				this.floatingTimeout = setTimeout( function () {
-					this.characterFloatingTween.start();
-				}.bind(this), Math.random()*4000);
-			}.bind(this));
+		this.toCharacterXTween = new TWEEN.Tween(this.mesh.position)
+			.to({
+				x: this.characterPositionScaleOpacity.x
+			}, TRANSITION_TIME*0.8)
+			.easing(TWEEN.Easing.Back.Out);
 
-		this.toCharacterTween.start();
+		this.toCharacterYTween = new TWEEN.Tween(this.mesh.position)
+			.to({
+				y: this.characterPositionScaleOpacity.y
+			})
+			.easing(TWEEN.Easing.Bounce.Out);
+
+		this.toCharacterScaleTween = new TWEEN.Tween({
+				scale: this.mesh.scale.x
+			})
+			.to({
+				scale: this.characterPositionScaleOpacity.scale
+			}, TRANSITION_TIME*0.8)
+			.easing(TWEEN.Easing.Quadratic.Out)
+			.onUpdate( function () {
+				particle.mesh.scale.set(this.scale, this.scale, this.scale);
+			});
+
+		this.toCharacterOpacityTween = new TWEEN.Tween({
+				opacity: this.mesh.material.opacity
+			})
+			.to({
+				opacity: this.characterPositionScaleOpacity.opacity
+			}, TRANSITION_TIME*0.8)
+			.easing(TWEEN.Easing.Exponential.InOut)
+			.onUpdate( function () {
+				particle.mesh.material.opacity = this.opacity;
+			});
+
+		this.toCharacterXTween.start();
+		this.toCharacterYTween.start();
+		this.toCharacterScaleTween.start();
+		this.toCharacterOpacityTween.start();
 	},
 
 	goToFloatingPosition: function () {
@@ -156,7 +185,7 @@ Particle.prototype = {
 		var particle = this;
 
 		this.toFloatingTween = new TWEEN.Tween( currentPositionScaleOpacity )
-			.to(this.floatingPositionScaleOpacity, 1000)
+			.to(this.floatingPositionScaleOpacity, TRANSITION_TIME)
 			.onUpdate( function (e) {
 				particle.mesh.position.set(this.x, this.y, 0);
 				particle.mesh.scale.set(this.scale, this.scale, this.scale);

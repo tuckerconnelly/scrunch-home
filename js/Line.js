@@ -1,5 +1,5 @@
 /* jshint globalstrict: true, browser: true */
-/* global THREE, TWEEN, PrismGeometry */
+/* global _, EventEmitter, THREE, TWEEN, BASE_LINE_ANIMATION_TIME, LINE_SPEED */
 
 'use strict';
 
@@ -12,15 +12,9 @@ var Line = function (particlePool, scene) {
 	this.initialize(particlePool, scene);
 };
 
-Line.prototype = {
-
-	leftToRight: undefined,
-	q: undefined,
-	theta1: undefined,
-	theta2: undefined,
+Line.prototype = _.extend(EventEmitter.prototype, {
 
 	curve: undefined,
-	line: undefined,
 	geometry: undefined,
 	object: undefined,
 
@@ -42,46 +36,54 @@ Line.prototype = {
 			rightParticle = particlePool[selectedParticles[0]];
 		}
 
-		this.leftToRight = true;//Math.random() > 0.5;
+		var leftToRight = Math.random() > 0.5;
 
 		var x1 = leftParticle.floatingPositionScaleOpacity.x;
 		var y1 = leftParticle.floatingPositionScaleOpacity.y;
 		var x2 = rightParticle.floatingPositionScaleOpacity.x;
 		var y2 = rightParticle.floatingPositionScaleOpacity.y;
 
-		this.q = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+		var q = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
 
-		var r = this.q;
+		var r = q;
 
 		var x3 = (x1 + x2) / 2;
 		var y3 = (y1 + y2) / 2;
 
-		var x = x3 - Math.sqrt(Math.pow(r, 2)-Math.pow(this.q/2, 2))*(y1-y2)/this.q;
-		var y = y3 - Math.sqrt(Math.pow(r, 2)-Math.pow(this.q/2, 2))*(x2-x1)/this.q;
+		var x = x3 - Math.sqrt(Math.pow(r, 2)-Math.pow(q/2, 2))*(y1-y2)/q;
+		var y = y3 - Math.sqrt(Math.pow(r, 2)-Math.pow(q/2, 2))*(x2-x1)/q;
 
-		this.theta1 = Math.PI - Math.acos((x - x1)/r);
-		this.theta2 = Math.PI - Math.acos((x - x2)/r);
+		var theta1 = Math.PI - Math.acos((x - x1)/r);
+		var theta2 = Math.PI - Math.acos((x - x2)/r);
 
 		var oneIsNegative = false;
 
 		if (y1 < y) {
-			this.theta1 = -this.theta1;
+			theta1 = 2*Math.PI-theta1;
+			if (x1 > x) {
+				theta1 += 2*Math.PI;
+			}
 			oneIsNegative = true;
 		}
 		if (y2 < y) {
-			this.theta2 = -this.theta2;
+			theta2 = -theta2;
+			if (x2 < x) {
+				theta2 += 2*Math.PI;
+			}
 			oneIsNegative = true;
 		}
 
 		// Adjust for particle size
-		this.theta1 -= Math.PI / this.q * 6;
-		this.theta2 += Math.PI / this.q * 6;
+		theta1 -= Math.PI / q * 6;
+		theta2 += Math.PI / q * 6;
+
+		var distance = Math.abs(theta2 - theta1) * Math.PI * r;
 
 		this.curve = new THREE.EllipseCurve(
 			x, y,
 			r, r,
-			this.leftToRight ? this.theta1 : this.theta2, this.leftToRight ? this.theta1 : this.theta2,
-			this.leftToRight,
+			leftToRight ? theta1 : theta2, leftToRight ? theta1 : theta2,
+			leftToRight,
 			0
 		);
 
@@ -93,21 +95,24 @@ Line.prototype = {
 
 		this.growingTween = new TWEEN.Tween(this.curve)
 			.to({
-				aEndAngle: this.leftToRight ? this.theta2 : this.theta1
-			})
+				aEndAngle: leftToRight ? theta2 : theta1
+			}, BASE_LINE_ANIMATION_TIME/2 + distance / LINE_SPEED)
+			.easing(TWEEN.Easing.Quadratic.Out)
 			.onUpdate( function () {
 				this.render(scene);
 			}.bind(this));
 
 		this.shrinkingTween = new TWEEN.Tween(this.curve)
 			.to({
-				aStartAngle: this.leftToRight ? this.theta2 : this.theta1
-			})
+				aStartAngle: leftToRight ? theta2 : theta1
+			}, BASE_LINE_ANIMATION_TIME/2 + distance / LINE_SPEED)
+			.easing(TWEEN.Easing.Quadratic.In)
 			.onUpdate( function () {
 				this.render(scene);
 			}.bind(this))
 			.onComplete( function () {
 				scene.remove(this.object);
+				this.trigger('death');
 			}.bind(this));
 
 		this.growingTween
@@ -125,4 +130,4 @@ Line.prototype = {
 
 		scene.add(this.object);
 	}
-};
+});
