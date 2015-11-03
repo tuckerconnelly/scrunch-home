@@ -24,10 +24,10 @@ body canvas {
 
 main > div {
 	position: fixed;
-	left: 50%;
 
-	width: 60rem;
-	margin-left: -30rem;
+	width: 100%;
+	padding: 0 6rem;
+	box-sizing: border-box;
 
 	text-align: center;
 
