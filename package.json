@@ -4,6 +4,7 @@
   "description": "The home of Scrunch",
   "main": "main.js",
   "dependencies": {
+    "bezier-easing": "^1.1.1",
     "domready": "^1.0.8",
     "express": "^4.13.3",
     "jquery": "^2.1.4",

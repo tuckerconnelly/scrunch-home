@@ -2,7 +2,7 @@
  * The height the particles float at
  * @type {Number}
  */
-var FLOAT_AMOUNT = 10;
+var FLOAT_AMOUNT = 5;
 var CHARACTER_FLOAT_AMOUNT = 5;
 
 /**
@@ -13,11 +13,12 @@ var CHARACTER_FORMED_CUTOFF = 200;
 
 var TRANSITION_TIME = 2000;
 
-/**
- * The delay between particles forming left-to-right in ms
- * @type {Number}
- */
-var LEFT_TO_RIGHT_DELAY = 10;
+var FOCAL_POINT = {
+	X: 100,
+	Y: 200
+};
+
+FOCAL_POINT_SPREAD = 0.25;
 
 /*
 

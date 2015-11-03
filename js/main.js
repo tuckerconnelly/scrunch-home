@@ -1,17 +1,22 @@
 domready( function () {
 
+	var scale = Math.pow(window.innerWidth / 512, 0.5);
+	console.log(scale);
+
 	// Set up the scene, camera, and renderer
+	
+	var adjustedInnerHeight = window.innerHeight * 1.2;
 	
 	var scene = new THREE.Scene();
 
-	var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000);
-	camera.position.z = window.innerHeight;
+	var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / (adjustedInnerHeight), 1, 1000);
+	camera.position.z = adjustedInnerHeight;
 	
 	var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-	renderer.setSize( window.innerWidth, window.innerHeight);
+	renderer.setSize( window.innerWidth, adjustedInnerHeight);
 	document.body.appendChild( renderer.domElement );
 
-	var currentHeight = window.innerHeight;
+	var currentHeight = adjustedInnerHeight;
 	var currentWidth = window.innerWidth;
 
 	// Handle resizing/responsiveness
@@ -29,26 +34,34 @@ domready( function () {
 
 		console.log('resize');
 
-		camera.aspect = window.innerWidth / window.innerHeight;
-		camera.updateProjectionMatrix();
-		camera.position.z = window.innerHeight;
+		var oldScale = scale;
+		scale = Math.pow(window.innerWidth / 512, 0.5);
 
-		renderer.setSize( window.innerWidth, window.innerHeight );
+		camera.aspect = window.innerWidth / (adjustedInnerHeight);
+		camera.updateProjectionMatrix();
+		camera.position.z = adjustedInnerHeight;
+
+		renderer.setSize( window.innerWidth, adjustedInnerHeight );
 
 		particles.forEach( function (particle) {
 
 			particle.floatingPositionScaleOpacity = {
-				x: particle.floatingPositionScaleOpacity.x * (window.innerWidth / currentWidth),
-				y: particle.floatingPositionScaleOpacity.y * (window.innerHeight / currentHeight),
-				scale: particle.floatingPositionScaleOpacity.scale * (window.innerWidth / currentWidth),
+				x: particle.floatingPositionScaleOpacity.x * (1 / oldScale) * scale,
+				y: particle.floatingPositionScaleOpacity.y * (1 / oldScale) * scale,
+				scale: particle.floatingPositionScaleOpacity.scale * (1 / oldScale) * scale,
 				opacity: particle.floatingPositionScaleOpacity.opacity
 			};
 
 			particle.characterPositionScaleOpacity = {
-				x: particle.characterPositionScaleOpacity.x * (window.innerWidth / currentWidth),
-				y: particle.characterPositionScaleOpacity.y * (window.innerWidth / currentWidth),
-				scale: particle.characterPositionScaleOpacity.scale / currentWidth * window.innerWidth,
+				x: particle.characterPositionScaleOpacity.x * (1 / oldScale) * scale,
+				y: particle.characterPositionScaleOpacity.y * (1 / oldScale) * scale,
+				scale: particle.characterPositionScaleOpacity.scale * (1 / oldScale) * scale,
 				opacity: particle.characterPositionScaleOpacity.opacity
+			};
+
+			partical.focalPoint = {
+				x: particle.floatingPositionScaleOpacity.x*FOCAL_POINT_SPREAD + FOCAL_POINT.X*scale,
+				y: particle.floatingPositionScaleOpacity.y*FOCAL_POINT_SPREAD + FOCAL_POINT.Y*scale
 			};
 
 			if (textFormed !== true) {
@@ -65,8 +78,8 @@ domready( function () {
 					particle.floatingPositionScaleOpacity.scale
 				);
 
-				particle.floatingTween.to({ y: particle.floatingPositionScaleOpacity.y + FLOAT_AMOUNT });
-				particle.floatingTween.start();
+				particle.createFloatingTween();
+				particle.floatingTween.start(currentTime - Math.random()*2000);
 			} else {
 				particle.characterFloatingTween.stop();
 				particle.mesh.position.set(
@@ -81,18 +94,20 @@ domready( function () {
 					particle.characterPositionScaleOpacity.scale
 				);
 
-				particle.characterFloatingTween.to({ y: particle.characterPositionScaleOpacity.y + FLOAT_AMOUNT });
-				particle.characterFloatingTween.start();
+				particle.createCharacterFloatingTween();
+				particle.characterFloatingTween.start(currentTime - Math.random()*2000);
 			}
 		});
 
-		line.growingTween.stop();
-		line.shrinkingTween.stop();
-		scene.remove(line.object);
-		makeLine();
+		if (textFormed === false) {
+			line.growingTween.stop();
+			line.shrinkingTween.stop();
+			scene.remove(line.object);
+			makeLine();
+		}
 
 		currentWidth = window.innerWidth;
-		currentHeight = window.innerHeight;
+		currentHeight = adjustedInnerHeight;
 	}, 1000));
 
 	// Particle stuff
@@ -110,13 +125,56 @@ domready( function () {
 		// So with the current camera settings, 1px = .75 threejs units
 
 		var sceneWidth = window.innerWidth * 1.5;
-		var sceneHeight = window.innerHeight * 1.5;
+		var sceneHeight = adjustedInnerHeight * 1.5;
 
-		var scaleFactor = Math.random()*1.5+0.5;
+		var topRight = Math.random() > 0.5 ;
 
-		// We need at least two particles on screen for the connection
-		// lines
-		var offScreen = index > 1 ? Math.random() > 0.33 : false;
+		var x;
+		var y;
+
+		// Guarantee at least two particles on screen for
+		// connection lines
+		if (n < 3) {
+			x = Math.random()*sceneWidth*0.80 - sceneWidth*0.40;
+			y = Math.random()*sceneHeight*0.80 - sceneHeight*0.40;
+		} else if (topRight !== true) {
+			x = Math.random()*sceneWidth*1.5 - sceneWidth*0.75;
+			y = Math.random()*sceneHeight*1.5 - sceneHeight*0.75;
+		} else {
+			var randomNumber = Math.random();
+			// Divide them evenly into 3 groups: one above screen, one to
+			// the top right of the screen, and one to the right of the
+			// screen
+			// Top right
+			if (randomNumber > 0.67) {
+				x = sceneWidth/2 + Math.random()*sceneWidth/4 + 100;
+				y = sceneHeight/2 + Math.random()*sceneHeight/4 + 100;
+			// Above
+			} else if (randomNumber > 0.33) {
+				x = Math.random()*sceneWidth/2;
+				y = sceneHeight/2 + Math.random()*sceneHeight/4 + 100;
+			// Right
+			} else {
+				x = sceneWidth/2 + Math.random()*sceneWidth/4 + 100;
+				y = sceneHeight/2 - Math.random()*sceneHeight;
+			}
+		}
+
+		if (n > 2) {
+			x *= scale;
+			y *= scale;
+		}
+
+		var offScreen = false;
+
+		if (
+			x < -sceneWidth/2 - 75 ||
+			x > sceneWidth/2 + 75 ||
+			y < -sceneHeight/2 - 75 ||
+			y > sceneHeight/2 + 75
+		) {
+			offScreen = true;
+		}
 
 		var theX = 20;
 		var theY = -100;
@@ -127,35 +185,45 @@ domready( function () {
 		}
 
 		var floatingPositionScaleOpacity = {
-			x: Math.random()*sceneWidth - sceneWidth / 2,
-			y: Math.random()*sceneHeight - sceneHeight / 2,
-			scale: offScreen ? scaleFactor*(window.innerWidth/1024) + 5 : scaleFactor*(window.innerWidth / 1024),
-			opacity: offScreen ? 0 : Math.random() * 0.8 + 0.2
+			x: x,
+			y: y,
+			scale: offScreen ? (Math.random()*3+2.5)*scale : (Math.random()*1.5+0.5)*scale,
+			opacity: Math.random() * 0.5 + 0.1
 		};
 
 		var characterPositionScaleOpacity = {
-			x: particleFormedPosition.x,
-			y: particleFormedPosition.y,
-			scale: (Math.random()*0.4 + 0.8)*window.innerWidth/1024 * 0.6,
-			opacity: Math.random() * 0.4 + 0.6
+			x: particleFormedPosition.x * scale,
+			y: particleFormedPosition.y * scale,
+			scale: (Math.random()*0.5 + 0.1)*scale,
+			opacity: Math.random() * 0.1 + 0.9
+		};
+
+		var focalPoint = {
+			x: x*FOCAL_POINT_SPREAD + FOCAL_POINT.X*scale,
+			y: y*FOCAL_POINT_SPREAD + FOCAL_POINT.Y*scale
 		};
 
 		switch (n % 3) {
 			case 0:
-				particle = new Particle(Particle.SQUARE, floatingPositionScaleOpacity, characterPositionScaleOpacity);
+				particle = new Particle(Particle.SQUARE, floatingPositionScaleOpacity, characterPositionScaleOpacity, focalPoint);
 				break;
 			case 1:
-				particle = new Particle(Particle.CIRCLE, floatingPositionScaleOpacity, characterPositionScaleOpacity);
+				particle = new Particle(Particle.CIRCLE, floatingPositionScaleOpacity, characterPositionScaleOpacity, focalPoint);
 				break;
 			case 2:
-				particle = new Particle(Particle.TRIANGLE, floatingPositionScaleOpacity, characterPositionScaleOpacity);
+				particle = new Particle(Particle.TRIANGLE, floatingPositionScaleOpacity, characterPositionScaleOpacity, focalPoint);
 				break;
 		}
 
 		scene.add(particle.mesh);
 		particles.push(particle);
 
-		if (offScreen === false) {
+		if (
+			x > -sceneWidth/2 + 25 &&
+			x < sceneWidth/2 - 25 &&
+			y > -sceneHeight/2 + 25 &&
+			y < sceneHeight/2 - 25
+		) {
 			foregroundParticles.push(particle);
 		}
 
@@ -177,6 +245,7 @@ domready( function () {
 	// Scroll hacking
 
 	var textFormed = false;
+	var toCharacterTimeouts = [];
 	var lineTimeout;
 
 	$(document).on('scroll', function () {
@@ -185,16 +254,20 @@ domready( function () {
 
 			$('#init-text').stop();
 
+			toCharacterTimeouts.forEach( function (toCharacterTimeout) {
+				clearTimeout(toCharacterTimeout);
+			});
+
 			particles.forEach( function (particle) {
-				particle.goToFloatingPosition();
+				particle.goToFloatingPosition(currentTime);
 			});
 			renderer.domElement.style.position = 'fixed';
 			renderer.domElement.style.top = '0px';
 
 			$('#billion-reasons').animate({
-				top: $('#billion-reasons').height() + window.innerHeight/2 +'px',
+				top: $('#billion-reasons').height() + adjustedInnerHeight/2 +'px',
 				opacity: 0
-			}, TRANSITION_TIME / 2, 'easeInQuad', function () {
+			}, TRANSITION_TIME / 4, 'easeInQuad', function () {
 				$('#init-text')
 					.css({
 						top: '-5rem'
@@ -202,7 +275,7 @@ domready( function () {
 					.animate({
 						top: 0,
 						opacity: 1
-					}, TRANSITION_TIME / 2, 'easeOutQuad');
+					}, TRANSITION_TIME / 4, 'easeOutQuad');
 			});
 
 			lineTimeout = setTimeout( function () {
@@ -215,10 +288,12 @@ domready( function () {
 
 			$('#billion-reasons').stop();
 
+			var delayBetweenParticles = TRANSITION_TIME * 0.2 / PARTICLE_FORMED_POSITIONS.length;
+
 			particles.forEach( function (particle, index) {
-				setTimeout( function () {
-					particle.goToCharacterPosition();
-				}, index * LEFT_TO_RIGHT_DELAY);
+				toCharacterTimeouts.push(setTimeout( function () {
+					particle.goToCharacterPosition(currentTime);
+				}, index * delayBetweenParticles));
 			});
 			renderer.domElement.style.position = 'absolute';
 			renderer.domElement.style.top = CHARACTER_FORMED_CUTOFF+'px';
@@ -229,10 +304,10 @@ domready( function () {
 			}, TRANSITION_TIME / 2, 'easeInQuad', function () {
 				$('#billion-reasons')
 					.css({
-						top: ($('#billion-reasons').height() + window.innerHeight/2)+'px'
+						top: ($('#billion-reasons').height() + adjustedInnerHeight/2)+'px'
 					})
 					.animate({
-						top: (200 + window.innerHeight/2)+'px',
+						top: (200 + adjustedInnerHeight/2)+'px',
 						opacity: 1
 					}, TRANSITION_TIME / 2, 'easeOutBack');
 			});
@@ -251,12 +326,12 @@ domready( function () {
 		if (window.innerWidth === currentWidth) {
 			return;
 		}
-
+/*
 		var newTop = 450 + window.innerHeight/2;
 
 		$('#billion-reasons').css({
 			top: newTop+'px'
-		});
+		});*/
 	}, 1000));
 
 	$('#billion-reasons').css({
@@ -279,10 +354,14 @@ domready( function () {
 
 	// Render loops
 
+	var currentTime;
+
 	function render(time) {
 		requestAnimationFrame( render );
 
-		TWEEN.update();
+		currentTime = time;
+
+		TWEEN.update(time);
 
 		renderer.render( scene, camera );
 	}

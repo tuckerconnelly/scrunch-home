@@ -29,6 +29,7 @@
             </div>
         </main>
 
+
         <script src="node_modules/jquery/dist/jquery.js"></script>
         <script src="node_modules/jquery.easing/jquery.easing.js"></script>
         <script src="node_modules/lodash/index.js"></script>
@@ -36,6 +37,13 @@
         <script src="node_modules/three/three.js"></script>
         <script src="node_modules/tween.js/src/Tween.js"></script>
         <script src="node_modules/wolfy87-eventemitter/EventEmitter.js"></script>
+
+        <script>
+            // bezier-easing doesn't have detection for 
+            // browsers, so emulating node here
+            var module = {};
+        </script>
+        <script src="node_modules/bezier-easing/index.js"></script>
 
         <script src="js/config.js"></script>
         <script src="js/PrismGeometry.js"></script>
