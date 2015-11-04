@@ -1,7 +1,6 @@
 domready( function () {
 
 	var scale = Math.pow(window.innerWidth / 512, 0.5);
-	console.log(scale);
 
 	// Set up the scene, camera, and renderer
 	
@@ -12,7 +11,7 @@ domready( function () {
 	var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / (adjustedInnerHeight), 1, 1000);
 	camera.position.z = adjustedInnerHeight;
 	
-	var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+	var renderer = window.WebGLRenderingContext ? new THREE.WebGLRenderer({ alpha: true, antialias: true }) : new THREE.CanvasRenderer({ alpha: true, antialias: true });
 	renderer.setSize( window.innerWidth, adjustedInnerHeight);
 	document.body.appendChild( renderer.domElement );
 
