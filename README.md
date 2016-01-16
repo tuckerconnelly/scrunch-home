@@ -17,3 +17,5 @@ aight dog, all u gotta do is
 11. 0, 0 is smack dab in the middle. negative units move left/up, positive right/down
 
 good luck dawg
+
+OH also, it works on everything, including iphone, but weirdly enough doesn't work on ipad. Not sure if this is a problem with BrowserStack or what, but give it a test and if it doesn't work I'll add some iPad-specific code
