@@ -11,7 +11,7 @@ domready( function () {
 	var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / (adjustedInnerHeight), 1, 1000);
 	camera.position.z = adjustedInnerHeight;
 	
-	var renderer = window.WebGLRenderingContext ? new THREE.WebGLRenderer({ alpha: true, antialias: true }) : new THREE.CanvasRenderer({ alpha: true, antialias: true });
+	var renderer = Detector.webgl ? new THREE.WebGLRenderer({ alpha: true, antialias: true }) : new THREE.CanvasRenderer({ alpha: true, antialias: true });
 	renderer.setSize( window.innerWidth, adjustedInnerHeight);
 	document.body.appendChild( renderer.domElement );
 
